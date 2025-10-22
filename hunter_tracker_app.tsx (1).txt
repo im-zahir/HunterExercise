@@ -1,0 +1,848 @@
+import React, { useState } from 'react';
+import { Trophy, Zap, Target, Heart, Eye, Dumbbell, Award, CheckCircle, Lock, Star, Clock, Calendar, Flame, Shield, Swords } from 'lucide-react';
+
+export default function HunterTracker() {
+  const [hunterData, setHunterData] = useState({
+    name: "Md Zahirul Islam",
+    level: 1,
+    xp: 0,
+    stats: {
+      strength: 1,
+      agility: 1,
+      endurance: 1,
+      vitality: 1,
+      sense: 1
+    },
+    completedQuests: [],
+    achievements: [],
+    unlockedSkills: [],
+    weeklyQuestsCompleted: [],
+    hiddenQuestsFound: []
+  });
+
+  const [activeTab, setActiveTab] = useState('quests');
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [showAchievement, setShowAchievement] = useState(null);
+  const [showSkillUnlock, setShowSkillUnlock] = useState(null);
+
+  const XP_PER_LEVEL = 500;
+  
+  const ranks = [
+    { name: "E-RANK", minLevel: 1, maxLevel: 5, title: "The Weakest Hunter", color: "text-gray-400" },
+    { name: "D-RANK", minLevel: 6, maxLevel: 10, title: "Novice Hunter", color: "text-green-400" },
+    { name: "C-RANK", minLevel: 11, maxLevel: 15, title: "Competent Hunter", color: "text-blue-400" },
+    { name: "B-RANK", minLevel: 16, maxLevel: 20, title: "Veteran Hunter", color: "text-purple-400" },
+    { name: "A-RANK", minLevel: 21, maxLevel: 25, title: "Elite Hunter", color: "text-yellow-400" },
+    { name: "S-RANK", minLevel: 26, maxLevel: 30, title: "Master Hunter", color: "text-red-400" },
+    { name: "NATIONAL", minLevel: 31, maxLevel: 999, title: "Shadow Monarch", color: "text-pink-400" }
+  ];
+
+  const dailyQuests = [
+    {
+      id: 'monday',
+      name: "WARRIOR'S TRIAL",
+      day: "Monday",
+      type: "Upper Body",
+      icon: "💪",
+      xp: 100,
+      stats: { strength: 2 },
+      exercises: [
+        "Push-ups: 3x10",
+        "Pike Push-ups: 3x8",
+        "Tricep Dips: 3x10",
+        "Plank Shoulder Taps: 3x20",
+        "Diamond Push-ups: 3x8",
+        "Superman Hold: 3x20sec",
+        "Boss: Diamond Push-ups to failure + 1min plank"
+      ]
+    },
+    {
+      id: 'tuesday',
+      name: "SPEED DUNGEON",
+      day: "Tuesday",
+      type: "Cardio & Core",
+      icon: "⚡",
+      xp: 100,
+      stats: { agility: 2, endurance: 1 },
+      exercises: [
+        "High Knees: 5x30sec",
+        "Burpees: 4x8",
+        "Mountain Climbers: 4x20",
+        "Bicycle Crunches: 4x20",
+        "Leg Raises: 4x12",
+        "Boss: 100 Jumping Jacks + Plank to failure"
+      ]
+    },
+    {
+      id: 'wednesday',
+      name: "IRON LEGS RAID",
+      day: "Wednesday",
+      type: "Lower Body",
+      icon: "🦵",
+      xp: 100,
+      stats: { strength: 2, vitality: 1 },
+      exercises: [
+        "Bodyweight Squats: 4x20",
+        "Lunges: 4x16 total",
+        "Jump Squats: 4x12",
+        "Glute Bridges: 4x15",
+        "Wall Sit: 4x45sec",
+        "Calf Raises: 4x20",
+        "Boss: Single Leg Glute Bridges 10 each x2 + 1min squat hold"
+      ]
+    },
+    {
+      id: 'thursday',
+      name: "RECOVERY SHRINE",
+      day: "Thursday",
+      type: "Active Rest",
+      icon: "🧘",
+      xp: 100,
+      stats: { vitality: 2, sense: 1 },
+      exercises: [
+        "Light Walk: 10min",
+        "Cat-Cow: 10 reps",
+        "Child's Pose: 1min",
+        "Pigeon Pose: 45sec each",
+        "Hamstring Stretch: 45sec each",
+        "Quad Stretch: 30sec each",
+        "Breathing Meditation: 5min"
+      ]
+    },
+    {
+      id: 'friday',
+      name: "SHADOW MONARCH'S CHALLENGE",
+      day: "Friday",
+      type: "Full Body Chaos",
+      icon: "👤",
+      xp: 100,
+      stats: { strength: 1, agility: 1, endurance: 1, vitality: 1, sense: 1 },
+      exercises: [
+        "4 ROUNDS:",
+        "Burpees: 10",
+        "Push-ups: 12",
+        "Jump Lunges: 16",
+        "Plank to Down Dog: 10",
+        "Squat Jumps: 15",
+        "Bicycle Crunches: 30",
+        "High Knees: 30sec",
+        "Superman: 15",
+        "FINAL BOSS: Max push-ups + Max squats + Plank to failure"
+      ]
+    }
+  ];
+
+  const weeklyQuests = [
+    {
+      id: 'week_1_2',
+      name: "E-RANK WEEKLY",
+      weeks: "1-2",
+      xp: 500,
+      requirements: [
+        "Complete all 5 Daily Quests",
+        "10min stretching on rest days",
+        "Drink 3L water daily for 7 days"
+      ]
+    },
+    {
+      id: 'week_3_4',
+      name: "D-RANK WEEKLY",
+      weeks: "3-4",
+      xp: 500,
+      requirements: [
+        "Complete all 5 Daily Quests",
+        "Beat previous week's push-up record",
+        "No junk food for 5 days"
+      ]
+    },
+    {
+      id: 'week_5_6',
+      name: "C-RANK WEEKLY",
+      weeks: "5-6",
+      xp: 500,
+      requirements: [
+        "Complete all 5 Daily Quests",
+        "Hold plank for 2 minutes straight",
+        "Complete a hidden quest"
+      ]
+    },
+    {
+      id: 'week_7_8',
+      name: "B-RANK WEEKLY",
+      weeks: "7-8",
+      xp: 500,
+      requirements: [
+        "Complete all 5 Daily Quests",
+        "Do 50 perfect push-ups in one session",
+        "Try an advanced exercise variation"
+      ]
+    }
+  ];
+
+  const hiddenQuests = [
+    { id: 'secret_training', name: "Secret Training", desc: "Work out twice in one day", xp: 500 },
+    { id: 'overachiever', name: "Overachiever", desc: "Do 50% more reps than required", xp: 300 },
+    { id: 'early_bird', name: "Early Bird", desc: "Complete quest before 7 AM", xp: 200 },
+    { id: 'night_warrior', name: "Night Warrior", desc: "Complete quest after 10 PM", xp: 200 },
+    { id: 'perfect_form', name: "Perfect Form Master", desc: "Complete 10 quests with perfect form", xp: 400 }
+  ];
+
+  const achievements = [
+    { id: 'first_step', name: "First Step", desc: "Complete your first Daily Quest", xp: 200, statBonus: null },
+    { id: 'dedication', name: "Dedication", desc: "Complete 5 Daily Quests in a row", xp: 200, statBonus: { vitality: 5 } },
+    { id: 'early_riser', name: "Early Riser", desc: "Work out before 8 AM", xp: 100, statBonus: null },
+    { id: 'night_owl', name: "Night Owl", desc: "Work out after 8 PM", xp: 100, statBonus: null },
+    { id: 'iron_will', name: "Iron Will", desc: "Complete 10 Daily Quests", xp: 300, statBonus: { endurance: 5 } },
+    { id: 'push_warrior', name: "Push-up Warrior", desc: "Do 100 push-ups in one day", xp: 300, statBonus: { strength: 10 } },
+    { id: 'speed_demon', name: "Speed Demon", desc: "Complete Speed Dungeon in under 25min", xp: 300, statBonus: { agility: 10 } },
+    { id: 'plank_master', name: "Plank Master", desc: "Hold plank for 3 minutes", xp: 300, statBonus: { endurance: 10 } },
+    { id: 'perfect_week', name: "Perfect Week", desc: "Complete all 5 quests in one week", xp: 500, statBonus: { strength: 5, agility: 5, endurance: 5, vitality: 5, sense: 5 } },
+    { id: 'the_grind', name: "The Grind", desc: "Complete 20 Daily Quests total", xp: 400, statBonus: null },
+    { id: 'rank_d', name: "Rank Up! D-RANK", desc: "Reach Level 6", xp: 500, statBonus: null },
+    { id: 'rank_c', name: "Double Rank Up! C-RANK", desc: "Reach Level 11", xp: 1000, statBonus: null },
+    { id: 'rank_b', name: "Elite Hunter B-RANK", desc: "Reach Level 16", xp: 1500, statBonus: null },
+    { id: 'rank_a', name: "Master A-RANK", desc: "Reach Level 21", xp: 2000, statBonus: null },
+    { id: 'rank_s', name: "ARISE - S-RANK", desc: "Reach Level 26", xp: 2500, statBonus: null },
+    { id: 'shadow_soldier', name: "Shadow Soldier", desc: "Complete 50 Daily Quests", xp: 1000, statBonus: { strength: 10, agility: 10, endurance: 10, vitality: 10, sense: 10 } },
+    { id: 'monster_hunter', name: "Monster Hunter", desc: "Complete all Weekly Quests for a month", xp: 1000, statBonus: null }
+  ];
+
+  const skillTree = [
+    { level: 5, name: "Power Strike", desc: "One-arm push-ups unlocked", icon: "🔥" },
+    { level: 5, name: "Swift Steps", desc: "Sprint intervals unlocked", icon: "💨" },
+    { level: 5, name: "Core Blast", desc: "Advanced planks unlocked", icon: "💪" },
+    { level: 10, name: "Explosive Power", desc: "Clap push-ups unlocked", icon: "💥" },
+    { level: 10, name: "Air Walk", desc: "Jump lunge variations unlocked", icon: "🦅" },
+    { level: 10, name: "Iron Body", desc: "L-sit practice unlocked", icon: "🛡️" },
+    { level: 15, name: "Shadow Clone", desc: "Pistol squats unlocked", icon: "👥" },
+    { level: 15, name: "Lightning Speed", desc: "HIIT sprints unlocked", icon: "⚡" },
+    { level: 15, name: "Diamond Defense", desc: "Advanced core circuits unlocked", icon: "💎" },
+    { level: 20, name: "Monarch's Authority", desc: "Handstand practice unlocked", icon: "👑" },
+    { level: 20, name: "Ruler's Reach", desc: "Advanced techniques unlocked", icon: "🎯" },
+    { level: 20, name: "Power Overwhelming", desc: "Max rep challenges unlocked", icon: "⭐" }
+  ];
+
+  const getCurrentRank = () => {
+    return ranks.find(r => hunterData.level >= r.minLevel && hunterData.level <= r.maxLevel);
+  };
+
+  const completeQuest = (quest, bonus = 0) => {
+    const today = new Date().toDateString();
+    const alreadyCompleted = hunterData.completedQuests.some(
+      q => q.id === quest.id && q.date === today
+    );
+
+    if (alreadyCompleted) {
+      alert("Quest already completed today!");
+      return;
+    }
+
+    let totalXP = quest.xp + bonus;
+    let newXP = hunterData.xp + totalXP;
+    let newLevel = hunterData.level;
+    let leveledUp = false;
+
+    while (newXP >= XP_PER_LEVEL) {
+      newXP -= XP_PER_LEVEL;
+      newLevel++;
+      leveledUp = true;
+      
+      const newSkills = skillTree.filter(s => s.level === newLevel && !hunterData.unlockedSkills.includes(s.name));
+      newSkills.forEach(skill => {
+        setShowSkillUnlock(skill);
+        setTimeout(() => setShowSkillUnlock(null), 4000);
+      });
+    }
+
+    const newStats = { ...hunterData.stats };
+    Object.keys(quest.stats).forEach(stat => {
+      newStats[stat] += quest.stats[stat];
+    });
+
+    const newCompletedQuests = [
+      ...hunterData.completedQuests,
+      { ...quest, date: today, bonus }
+    ];
+
+    const newUnlockedSkills = [...hunterData.unlockedSkills];
+    skillTree.filter(s => s.level <= newLevel).forEach(skill => {
+      if (!newUnlockedSkills.includes(skill.name)) {
+        newUnlockedSkills.push(skill.name);
+      }
+    });
+
+    setHunterData({
+      ...hunterData,
+      xp: newXP,
+      level: newLevel,
+      stats: newStats,
+      completedQuests: newCompletedQuests,
+      unlockedSkills: newUnlockedSkills
+    });
+
+    checkAchievements(newCompletedQuests, newLevel, newStats);
+
+    if (leveledUp) {
+      setShowLevelUp(true);
+      setTimeout(() => setShowLevelUp(false), 3000);
+    }
+  };
+
+  const completeWeeklyQuest = (quest) => {
+    if (hunterData.weeklyQuestsCompleted.includes(quest.id)) {
+      alert("Weekly Quest already completed!");
+      return;
+    }
+
+    let newXP = hunterData.xp + quest.xp;
+    let newLevel = hunterData.level;
+
+    while (newXP >= XP_PER_LEVEL) {
+      newXP -= XP_PER_LEVEL;
+      newLevel++;
+    }
+
+    setHunterData({
+      ...hunterData,
+      xp: newXP,
+      level: newLevel,
+      weeklyQuestsCompleted: [...hunterData.weeklyQuestsCompleted, quest.id]
+    });
+
+    checkAchievements(hunterData.completedQuests, newLevel, hunterData.stats);
+  };
+
+  const completeHiddenQuest = (quest) => {
+    if (hunterData.hiddenQuestsFound.includes(quest.id)) {
+      alert("Hidden Quest already completed!");
+      return;
+    }
+
+    let newXP = hunterData.xp + quest.xp;
+    let newLevel = hunterData.level;
+
+    while (newXP >= XP_PER_LEVEL) {
+      newXP -= XP_PER_LEVEL;
+      newLevel++;
+    }
+
+    setHunterData({
+      ...hunterData,
+      xp: newXP,
+      level: newLevel,
+      hiddenQuestsFound: [...hunterData.hiddenQuestsFound, quest.id]
+    });
+
+    setShowAchievement({ name: "Hidden Quest!", desc: quest.name, xp: quest.xp });
+    setTimeout(() => setShowAchievement(null), 4000);
+  };
+
+  const checkAchievements = (completedQuests, level) => {
+    const totalQuests = completedQuests.length;
+    const unlockedAchievements = [...hunterData.achievements];
+
+    achievements.forEach(achievement => {
+      if (unlockedAchievements.includes(achievement.id)) return;
+
+      let shouldUnlock = false;
+
+      if (achievement.id === 'first_step') shouldUnlock = totalQuests >= 1;
+      if (achievement.id === 'dedication') shouldUnlock = totalQuests >= 5;
+      if (achievement.id === 'iron_will') shouldUnlock = totalQuests >= 10;
+      if (achievement.id === 'the_grind') shouldUnlock = totalQuests >= 20;
+      if (achievement.id === 'shadow_soldier') shouldUnlock = totalQuests >= 50;
+      if (achievement.id === 'rank_d') shouldUnlock = level >= 6;
+      if (achievement.id === 'rank_c') shouldUnlock = level >= 11;
+      if (achievement.id === 'rank_b') shouldUnlock = level >= 16;
+      if (achievement.id === 'rank_a') shouldUnlock = level >= 21;
+      if (achievement.id === 'rank_s') shouldUnlock = level >= 26;
+
+      if (shouldUnlock) {
+        unlockAchievement(achievement);
+      }
+    });
+  };
+
+  const unlockAchievement = (achievement) => {
+    const newStats = { ...hunterData.stats };
+    if (achievement.statBonus) {
+      Object.keys(achievement.statBonus).forEach(stat => {
+        newStats[stat] += achievement.statBonus[stat];
+      });
+    }
+
+    setHunterData(prev => ({
+      ...prev,
+      achievements: [...prev.achievements, achievement.id],
+      xp: prev.xp + achievement.xp,
+      stats: newStats
+    }));
+
+    setShowAchievement(achievement);
+    setTimeout(() => setShowAchievement(null), 4000);
+  };
+
+  const getTodayCompletedQuests = () => {
+    const today = new Date().toDateString();
+    return hunterData.completedQuests.filter(q => q.date === today);
+  };
+
+  const getThisWeekCompletedQuests = () => {
+    const now = new Date();
+    const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+    return hunterData.completedQuests.filter(q => new Date(q.date) >= weekStart);
+  };
+
+  const xpPercentage = (hunterData.xp / XP_PER_LEVEL) * 100;
+  const currentRank = getCurrentRank();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-2 sm:p-4 overflow-x-hidden">
+      {showLevelUp && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-90 animate-pulse">
+          <div className="text-center p-4">
+            <div className="text-6xl sm:text-9xl mb-4 animate-bounce">⚡</div>
+            <div className="text-4xl sm:text-7xl font-bold text-yellow-400 mb-4">LEVEL UP!</div>
+            <div className="text-2xl sm:text-4xl mb-2">Level {hunterData.level}</div>
+            <div className="text-sm sm:text-xl text-gray-400">New power awakens within you...</div>
+          </div>
+        </div>
+      )}
+
+      {showAchievement && (
+        <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 bg-gradient-to-r from-yellow-600 to-yellow-400 p-4 sm:p-6 rounded-lg shadow-2xl z-50 animate-bounce max-w-sm mx-auto sm:mx-0">
+          <div className="flex items-center gap-3">
+            <Trophy className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+            <div className="min-w-0">
+              <div className="font-bold text-base sm:text-lg">Achievement Unlocked!</div>
+              <div className="text-xs sm:text-sm truncate">{showAchievement.name}</div>
+              <div className="text-xs truncate">{showAchievement.desc}</div>
+              <div className="text-xs font-bold mt-1">+{showAchievement.xp} XP</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSkillUnlock && (
+        <div className="fixed top-24 left-4 right-4 sm:left-auto sm:right-4 bg-gradient-to-r from-purple-600 to-blue-600 p-4 sm:p-6 rounded-lg shadow-2xl z-50 animate-bounce max-w-sm mx-auto sm:mx-0">
+          <div className="flex items-center gap-3">
+            <div className="text-3xl sm:text-4xl flex-shrink-0">{showSkillUnlock.icon}</div>
+            <div className="min-w-0">
+              <div className="font-bold text-base sm:text-lg">Skill Unlocked!</div>
+              <div className="text-xs sm:text-sm truncate">{showSkillUnlock.name}</div>
+              <div className="text-xs truncate">{showSkillUnlock.desc}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-6xl mx-auto w-full">
+        <div className="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-purple-500 shadow-2xl">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+            <div className="w-full sm:w-auto">
+              <div className="text-xs sm:text-sm text-gray-400">HUNTER NAME</div>
+              <div className="text-xl sm:text-3xl font-bold truncate">{hunterData.name}</div>
+            </div>
+            <div className="text-left sm:text-right w-full sm:w-auto">
+              <div className={`text-xl sm:text-2xl font-bold ${currentRank.color}`}>
+                {currentRank.name}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-400">{currentRank.title}</div>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <div className="flex justify-between mb-2">
+              <span className="text-base sm:text-lg font-bold">Level {hunterData.level}</span>
+              <span className="text-xs sm:text-sm text-gray-400">{hunterData.xp} / {XP_PER_LEVEL} XP</span>
+            </div>
+            <div className="w-full bg-gray-800 rounded-full h-3 sm:h-4 overflow-hidden shadow-inner">
+              <div 
+                className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 h-full transition-all duration-500 shadow-lg"
+                style={{ width: `${xpPercentage}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-5 gap-2 sm:gap-4">
+            <div className="text-center bg-gray-800 bg-opacity-50 p-2 rounded">
+              <Dumbbell className="w-4 h-4 sm:w-6 sm:h-6 mx-auto mb-1 text-red-400" />
+              <div className="text-xs text-gray-400 hidden sm:block">STRENGTH</div>
+              <div className="text-xs sm:hidden text-gray-400">STR</div>
+              <div className="text-lg sm:text-2xl font-bold">{hunterData.stats.strength}</div>
+            </div>
+            <div className="text-center bg-gray-800 bg-opacity-50 p-2 rounded">
+              <Zap className="w-4 h-4 sm:w-6 sm:h-6 mx-auto mb-1 text-yellow-400" />
+              <div className="text-xs text-gray-400 hidden sm:block">AGILITY</div>
+              <div className="text-xs sm:hidden text-gray-400">AGI</div>
+              <div className="text-lg sm:text-2xl font-bold">{hunterData.stats.agility}</div>
+            </div>
+            <div className="text-center bg-gray-800 bg-opacity-50 p-2 rounded">
+              <Target className="w-4 h-4 sm:w-6 sm:h-6 mx-auto mb-1 text-green-400" />
+              <div className="text-xs text-gray-400 hidden sm:block">ENDURANCE</div>
+              <div className="text-xs sm:hidden text-gray-400">END</div>
+              <div className="text-lg sm:text-2xl font-bold">{hunterData.stats.endurance}</div>
+            </div>
+            <div className="text-center bg-gray-800 bg-opacity-50 p-2 rounded">
+              <Heart className="w-4 h-4 sm:w-6 sm:h-6 mx-auto mb-1 text-pink-400" />
+              <div className="text-xs text-gray-400 hidden sm:block">VITALITY</div>
+              <div className="text-xs sm:hidden text-gray-400">VIT</div>
+              <div className="text-lg sm:text-2xl font-bold">{hunterData.stats.vitality}</div>
+            </div>
+            <div className="text-center bg-gray-800 bg-opacity-50 p-2 rounded">
+              <Eye className="w-4 h-4 sm:w-6 sm:h-6 mx-auto mb-1 text-blue-400" />
+              <div className="text-xs text-gray-400 hidden sm:block">SENSE</div>
+              <div className="text-xs sm:hidden text-gray-400">SEN</div>
+              <div className="text-lg sm:text-2xl font-bold">{hunterData.stats.sense}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2">
+          {['quests', 'weekly', 'hidden', 'skills', 'achievements'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-bold transition-all whitespace-nowrap text-xs sm:text-base flex-shrink-0 ${
+                activeTab === tab
+                  ? 'bg-gradient-to-r from-purple-600 to-blue-600'
+                  : 'bg-gray-800 hover:bg-gray-700'
+              }`}
+            >
+              {tab === 'quests' && '⚔️ DAILY'}
+              {tab === 'weekly' && '📅 WEEKLY'}
+              {tab === 'hidden' && '🔍 HIDDEN'}
+              {tab === 'skills' && '⭐ SKILLS'}
+              {tab === 'achievements' && '🏆 AWARDS'}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'quests' && (
+          <div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+              <h2 className="text-2xl sm:text-3xl font-bold">⚔️ DAILY QUESTS</h2>
+              <div className="text-left sm:text-right">
+                <div className="text-xl sm:text-2xl font-bold text-green-400">{getTodayCompletedQuests().length} / 5</div>
+                <div className="text-xs sm:text-sm text-gray-400">Today's Progress</div>
+              </div>
+            </div>
+            
+            <div className="grid gap-3 sm:gap-4">
+              {dailyQuests.map(quest => {
+                const today = new Date().toDateString();
+                const isCompleted = hunterData.completedQuests.some(
+                  q => q.id === quest.id && q.date === today
+                );
+
+                return (
+                  <div 
+                    key={quest.id}
+                    className={`bg-gradient-to-r ${isCompleted ? 'from-green-900 to-green-800' : 'from-gray-800 to-gray-900'} rounded-lg p-3 sm:p-4 border-2 ${isCompleted ? 'border-green-500' : 'border-gray-700'} transition-all`}
+                  >
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3">
+                      <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                        <div className="text-3xl sm:text-5xl flex-shrink-0">{quest.icon}</div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-lg sm:text-2xl font-bold truncate">{quest.name}</div>
+                          <div className="text-xs sm:text-sm text-gray-400">{quest.day} - {quest.type}</div>
+                          <div className="text-xs text-purple-400 mt-1">
+                            {quest.xp} XP + Stats
+                          </div>
+                        </div>
+                      </div>
+                      {isCompleted ? (
+                        <div className="flex items-center gap-2 text-green-400 w-full sm:w-auto justify-end">
+                          <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8" />
+                          <span className="font-bold text-sm sm:text-base">COMPLETED</span>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2 w-full sm:w-auto">
+                          <button
+                            onClick={() => completeQuest(quest)}
+                            className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold transition-all transform hover:scale-105 text-sm sm:text-base"
+                          >
+                            COMPLETE
+                          </button>
+                          <button
+                            onClick={() => completeQuest(quest, 50)}
+                            className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-bold transition-all transform hover:scale-105 text-xs whitespace-nowrap"
+                          >
+                            +BONUS<br className="hidden sm:block" /><span className="sm:hidden"> </span>+50XP
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="bg-black bg-opacity-30 rounded p-2 sm:p-3 mt-2">
+                      <div className="text-xs font-bold text-gray-400 mb-2">OBJECTIVES:</div>
+                      <div className="grid gap-1">
+                        {quest.exercises.map((ex, i) => (
+                          <div key={i} className="text-xs sm:text-sm text-gray-300">• {ex}</div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'weekly' && (
+          <div>
+            <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
+              <Calendar className="w-8 h-8" />
+              WEEKLY QUESTS
+            </h2>
+            <div className="grid gap-4">
+              {weeklyQuests.map(quest => {
+                const isCompleted = hunterData.weeklyQuestsCompleted.includes(quest.id);
+                return (
+                  <div 
+                    key={quest.id}
+                    className={`bg-gradient-to-r ${isCompleted ? 'from-green-900 to-green-800' : 'from-gray-800 to-gray-900'} rounded-lg p-6 border-2 ${isCompleted ? 'border-green-500' : 'border-purple-700'}`}
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <div className="text-2xl font-bold">{quest.name}</div>
+                        <div className="text-sm text-gray-400">Weeks {quest.weeks}</div>
+                        <div className="text-lg text-yellow-400 mt-2">Reward: {quest.xp} XP</div>
+                      </div>
+                      {isCompleted ? (
+                        <div className="flex items-center gap-2 text-green-400">
+                          <CheckCircle className="w-8 h-8" />
+                          <span className="font-bold">COMPLETED</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => completeWeeklyQuest(quest)}
+                          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-6 py-3 rounded-lg font-bold transition-all transform hover:scale-105"
+                        >
+                          COMPLETE
+                        </button>
+                      )}
+                    </div>
+                    <div className="bg-black bg-opacity-30 rounded p-4">
+                      <div className="text-sm font-bold text-gray-400 mb-2">REQUIREMENTS:</div>
+                      {quest.requirements.map((req, i) => (
+                        <div key={i} className="text-sm text-gray-300 mb-1">✓ {req}</div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-6 bg-purple-900 bg-opacity-50 rounded-lg p-4 border border-purple-700">
+              <div className="text-lg font-bold mb-2">📊 This Week's Progress</div>
+              <div className="text-3xl font-bold text-purple-400">{getThisWeekCompletedQuests().length} / 5</div>
+              <div className="text-sm text-gray-400">Daily Quests Completed This Week</div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'hidden' && (
+          <div>
+            <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
+              <Star className="w-8 h-8 text-yellow-400" />
+              HIDDEN QUESTS
+            </h2>
+            <div className="bg-yellow-900 bg-opacity-30 rounded-lg p-4 border border-yellow-700 mb-6">
+              <div className="text-sm">
+                🔍 <span className="font-bold">Hidden quests unlock bonus XP!</span> Complete special challenges to discover them.
+              </div>
+            </div>
+            <div className="grid gap-4">
+              {hiddenQuests.map(quest => {
+                const isCompleted = hunterData.hiddenQuestsFound.includes(quest.id);
+                return (
+                  <div 
+                    key={quest.id}
+                    className={`bg-gradient-to-r ${isCompleted ? 'from-yellow-900 to-yellow-800' : 'from-gray-800 to-gray-900'} rounded-lg p-6 border-2 ${isCompleted ? 'border-yellow-500' : 'border-gray-700'}`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="text-xl font-bold">{quest.name}</div>
+                        <div className="text-sm text-gray-400">{quest.desc}</div>
+                        <div className="text-lg text-yellow-400 mt-2">Reward: {quest.xp} XP</div>
+                      </div>
+                      {isCompleted ? (
+                        <div className="flex items-center gap-2 text-yellow-400">
+                          <Star className="w-8 h-8 fill-yellow-400" />
+                          <span className="font-bold">FOUND!</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => completeHiddenQuest(quest)}
+                          className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 px-6 py-3 rounded-lg font-bold transition-all transform hover:scale-105"
+                        >
+                          UNLOCK
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-6 bg-yellow-900 bg-opacity-50 rounded-lg p-4 border border-yellow-700">
+              <div className="text-lg font-bold mb-2">🌟 Hidden Quest Progress</div>
+              <div className="text-3xl font-bold text-yellow-400">{hunterData.hiddenQuestsFound.length} / {hiddenQuests.length}</div>
+              <div className="text-sm text-gray-400">Secrets Discovered</div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'skills' && (
+          <div>
+            <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
+              <Swords className="w-8 h-8 text-purple-400" />
+              SKILL TREE
+            </h2>
+            <div className="bg-purple-900 bg-opacity-30 rounded-lg p-4 border border-purple-700 mb-6">
+              <div className="text-sm">
+                ⚡ <span className="font-bold">Unlock new abilities as you level up!</span> Skills grant access to advanced exercises.
+              </div>
+            </div>
+            <div className="grid gap-4">
+              {[5, 10, 15, 20].map(level => {
+                const levelSkills = skillTree.filter(s => s.level === level);
+                const isUnlocked = hunterData.level >= level;
+                
+                return (
+                  <div key={level} className={`bg-gradient-to-r ${isUnlocked ? 'from-purple-900 to-blue-900' : 'from-gray-800 to-gray-900'} rounded-lg p-6 border-2 ${isUnlocked ? 'border-purple-500' : 'border-gray-700'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      {isUnlocked ? (
+                        <Shield className="w-8 h-8 text-purple-400" />
+                      ) : (
+                        <Lock className="w-8 h-8 text-gray-600" />
+                      )}
+                      <div>
+                        <div className="text-2xl font-bold">Level {level} Skills</div>
+                        <div className="text-sm text-gray-400">
+                          {isUnlocked ? 'UNLOCKED' : `Unlock at Level ${level}`}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid gap-3">
+                      {levelSkills.map(skill => (
+                        <div key={skill.name} className={`bg-black bg-opacity-30 rounded p-4 flex items-center gap-3 ${!isUnlocked && 'opacity-50'}`}>
+                          <div className="text-3xl">{skill.icon}</div>
+                          <div className="flex-1">
+                            <div className="font-bold">{skill.name}</div>
+                            <div className="text-sm text-gray-400">{skill.desc}</div>
+                          </div>
+                          {isUnlocked && <CheckCircle className="w-6 h-6 text-green-400" />}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-6 bg-purple-900 bg-opacity-50 rounded-lg p-4 border border-purple-700">
+              <div className="text-lg font-bold mb-2">⭐ Skills Unlocked</div>
+              <div className="text-3xl font-bold text-purple-400">{hunterData.unlockedSkills.length} / {skillTree.length}</div>
+              <div className="text-sm text-gray-400">New Abilities Mastered</div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'achievements' && (
+          <div>
+            <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
+              <Trophy className="w-8 h-8 text-yellow-400" />
+              ACHIEVEMENTS
+            </h2>
+            <div className="mb-6 bg-yellow-900 bg-opacity-30 rounded-lg p-4 border border-yellow-700">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-yellow-400 mb-2">
+                  {hunterData.achievements.length} / {achievements.length}
+                </div>
+                <div className="text-sm text-gray-400">Achievements Unlocked</div>
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              {achievements.map(achievement => {
+                const isUnlocked = hunterData.achievements.includes(achievement.id);
+                
+                return (
+                  <div 
+                    key={achievement.id}
+                    className={`bg-gradient-to-r ${isUnlocked ? 'from-yellow-900 to-orange-900' : 'from-gray-800 to-gray-900'} rounded-lg p-4 border-2 ${isUnlocked ? 'border-yellow-500' : 'border-gray-700'} ${!isUnlocked && 'opacity-60'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      {isUnlocked ? (
+                        <Trophy className="w-10 h-10 text-yellow-400 flex-shrink-0" />
+                      ) : (
+                        <Lock className="w-10 h-10 text-gray-600 flex-shrink-0" />
+                      )}
+                      <div className="flex-1">
+                        <div className="font-bold text-lg">{achievement.name}</div>
+                        <div className="text-sm text-gray-400">{achievement.desc}</div>
+                        <div className="text-xs text-purple-400 mt-1">
+                          {achievement.xp} XP
+                          {achievement.statBonus && ` + ${Object.entries(achievement.statBonus).map(([k,v]) => `${k.toUpperCase()} +${v}`).join(', ')}`}
+                        </div>
+                      </div>
+                      {isUnlocked && (
+                        <CheckCircle className="w-8 h-8 text-green-400 flex-shrink-0" />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 grid md:grid-cols-3 gap-4">
+          <div className="bg-gray-800 rounded-lg p-6 border-2 border-gray-700">
+            <div className="flex items-center gap-3 mb-3">
+              <Flame className="w-8 h-8 text-orange-400" />
+              <div className="text-lg font-bold">Total XP Earned</div>
+            </div>
+            <div className="text-4xl font-bold text-orange-400">
+              {hunterData.completedQuests.reduce((sum, q) => sum + (q.xp || 100) + (q.bonus || 0), 0) + 
+               hunterData.achievements.reduce((sum, a) => {
+                 const ach = achievements.find(x => x.id === a);
+                 return sum + (ach?.xp || 0);
+               }, 0)}
+            </div>
+            <div className="text-sm text-gray-400 mt-1">Lifetime Total</div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6 border-2 border-gray-700">
+            <div className="flex items-center gap-3 mb-3">
+              <Award className="w-8 h-8 text-purple-400" />
+              <div className="text-lg font-bold">Quest History</div>
+            </div>
+            <div className="text-4xl font-bold text-purple-400">
+              {hunterData.completedQuests.length}
+            </div>
+            <div className="text-sm text-gray-400 mt-1">Total Quests Completed</div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6 border-2 border-gray-700">
+            <div className="flex items-center gap-3 mb-3">
+              <Clock className="w-8 h-8 text-blue-400" />
+              <div className="text-lg font-bold">Today's Progress</div>
+            </div>
+            <div className="text-4xl font-bold text-blue-400">
+              {getTodayCompletedQuests().length} / 5
+            </div>
+            <div className="text-sm text-gray-400 mt-1">Daily Quests</div>
+          </div>
+        </div>
+
+        <div className="mt-6 bg-gradient-to-r from-indigo-900 to-purple-900 rounded-lg p-6 border-2 border-purple-500 text-center">
+          <div className="text-3xl font-bold mb-2">💀 "I ALONE LEVEL UP" 💀</div>
+          <div className="text-gray-400 mb-4">Your journey to S-Rank has begun</div>
+          <div className="text-sm text-purple-300">
+            Level {hunterData.level} • {currentRank.name} • {hunterData.completedQuests.length} Quests Completed
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
